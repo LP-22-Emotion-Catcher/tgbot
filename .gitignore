@@ -1,0 +1,5 @@
+.env
+bot.log
+bot.py
+.git
+service/__pycache__
