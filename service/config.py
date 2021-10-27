@@ -1,2 +1,2 @@
 import os
-TOKEN=os.environ['TOKEN']
+TOKEN = os.environ['TOKEN']
