@@ -57,16 +57,38 @@ def get_posts(update, context):
                               .format(need_emotion, posts.json()[0]['text']))
 
 
+@app.route("/api/v1/wall", methods=['POST'])
+def set_wall(update, context):
+    text = update.message.text[1]
+    print(text)
+    data = text.split('-')
+    wall = "-" + str(data[1])
+    logging.info(wall)
+    update.message.reply_text(wall)
+    payload = {
+        "wall": wall,
+        "link": text,
+        "uid": "-1"
+    }
+    update.message.reply_text(payload)
+    try:
+        httpx.post('http://localhost:5001/api/v1/walls', json=payload)
+        update.message.reply_text('Ваша стена добавлена в базу')
+    except httpx.ConnectError:
+        logging.info("Can\'t connect to backend")
+
+
 def main():
     mybot = Updater(TOKEN, use_context=True)
     dp = mybot.dispatcher
+    dp.add_handler(CommandHandler("setwall", set_wall))
     dp.add_handler(CommandHandler("predict", get_emotions))
     dp.add_handler(CommandHandler("posts", get_posts))
     dp.add_handler(CommandHandler("start", greet_user))
     dp.add_handler(MessageHandler(Filters.text, default_response_to_user))
     mybot.start_polling()
     mybot.idle()
-    logging.basicConfig(level=logging.DEBUG)
+    logging.basicConfig(level=logging.INFO)
     app.run(port=5005, debug=True)
 
 
