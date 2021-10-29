@@ -1,11 +1,9 @@
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-from flask import Flask
 import httpx
 
 from service.config import TOKEN
 
-app = Flask(__name__)
 
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
                     level=logging.INFO,
@@ -35,7 +33,6 @@ def default_response_to_user(update, context):
     update.message.reply_text(text)
 
 
-@app.route("/api/v1/emotions", methods=['POST'])
 def get_emotions(update, context):
     text = update.message.text
     text = text.replace('/predict ', '')
@@ -51,7 +48,6 @@ def get_emotions(update, context):
                                 РАСПОЗНАНО, КАК: {}'''.format(text, emotion))
 
 
-@app.route("/api/v1/posts", methods=['GET'])
 def get_posts(update, context):
     text = update.message.text
     text = text.replace('/posts ', '')
@@ -66,7 +62,6 @@ def get_posts(update, context):
         logging.info('Can\'t connect to backend')
 
 
-@app.route("/api/v1/wall", methods=['POST'])
 def set_wall(update, context):
     text = update.message.text
     link = text.replace('/setwall ', '')
@@ -99,7 +94,8 @@ def main():
     mybot.idle()
     logging.basicConfig(level=logging.INFO)
     logging.info('TG bot has started')
-    app.run(port=5005, debug=True)
+    # app.run(port=5005, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
 
 
 if __name__ == "__main__":
