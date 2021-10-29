@@ -2,7 +2,7 @@ import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import httpx
 
-from service.config import TOKEN
+from service.config import TOKEN, emotion_url, backend_url
 
 
 logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
@@ -39,7 +39,7 @@ def get_emotions(update, context):
     logging.info(f'This is your text: {text}')
     payload = {'text': text}
     try:
-        emotion = httpx.post('http://127.0.0.1:5000/api/v1/predict', json=payload)
+        emotion = httpx.post(f'{emotion_url}/api/v1/predict', json=payload)
     except httpx.ConnectError:
         logging.info('Can\'t connect with emotion service. No emotion color is received')
 
@@ -56,7 +56,7 @@ def get_posts(update, context):
     logging.info(f'This is your wall: {uid}')
     logging.info(f'This is your emotion: {need_emotion}')
     try:
-        posts = httpx.get(f'http://127.0.0.1:5001/api/v1/walls/{uid}/posts/?emotion={{{need_emotion}}}')
+        posts = httpx.get(f'{backend_url}/api/v1/walls/{uid}/posts/?emotion={{{need_emotion}}}')
         update.message.reply_text('''Указанной эмоциональной окраске: {} \nCоответствуют комментарии:\n"{}"\n'''.format(need_emotion, posts.json()[0]['text']))
     except httpx.ConnectError:
         logging.info('Can\'t connect to backend')
@@ -84,6 +84,8 @@ def set_wall(update, context):
 
 def main():
     mybot = Updater(TOKEN, use_context=True)
+    logging.basicConfig(level=logging.INFO)
+    logging.info('TG bot has started')
     dp = mybot.dispatcher
     dp.add_handler(CommandHandler("setwall", set_wall))
     dp.add_handler(CommandHandler("predict", get_emotions))
@@ -92,10 +94,6 @@ def main():
     # dp.add_handler(MessageHandler(Filters.text, default_response_to_user))
     mybot.start_polling()
     mybot.idle()
-    logging.basicConfig(level=logging.INFO)
-    logging.info('TG bot has started')
-    # app.run(port=5005, debug=True)
-    app.run(host='0.0.0.0', port=5000, debug=True)
 
 
 if __name__ == "__main__":
