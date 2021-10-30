@@ -76,7 +76,7 @@ def set_wall(update, context):
         "uid": "-1"
     }
     try:
-        httpx.post('http://localhost:5001/api/v1/walls', json=payload)
+        httpx.post(f'{backend_url}/api/v1/walls', json=payload)
         update.message.reply_text('Ваша стена добавлена в базу')
     except httpx.ConnectError:
         logging.info("Can\'t connect to backend")
