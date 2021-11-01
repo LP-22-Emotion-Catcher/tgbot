@@ -1,14 +1,15 @@
 import logging
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
 import httpx
+import re
 
 from service.config import TOKEN, emotion_url, backend_url
 
 
-logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
-                    level=logging.INFO,
-                    filename='bot.log')
-
+# logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
+#                    level=logging.INFO,
+#                    filename='bot.log')
+logger = logging.getLogger(__name__)
 
 PROXY = {
     'proxy_url': 'socks5://t1.learn.python.ru:1080',
@@ -20,16 +21,26 @@ PROXY = {
 
 
 def greet_user(update, context):
-    text = 'Привет ! Я умею распознавать эмоциональный окрас текстов !\nДля этого отправь мне\
-            текст в формате:\n/predict твой текст'
-    print(text)
+    text = """Привет! Я умею распознавать эмоциональный окрас текстов! Для получения полного\
+ списка доступных команд введите /help"""
     update.message.reply_text(text)
 
 
 def default_response_to_user(update, context):
-    user_text = update.message.text
-    text = 'Для распознавания эмоциональной окраски текста отправь мне текст в формате:\n\
-            /predict твой текст'
+    # user_text = update.message.text
+    text = """Для распознавания эмоциональной окраски текста отправь мне текст\
+ в формате: /predict твой текст либо /help для доступа к командам"""
+    update.message.reply_text(text)
+
+
+def print_help(update, context):
+    text = """Команды:\n
+ /predict твой текст - определяет эмоциональный окрас текста\n
+ Пример: /predict Какой замечательный сегодня день!\n
+ /set_wall ссылка на стену в контакте - добавляет стену в базу\n
+ Пример: /set_wall https://vk.com/wall-101982925\n
+ /posts номер стены эм.окраска - возвращает пост со стены с эм.окраской\n
+ Пример: /posts -101982925 positive (доступные варианты: negative, neutral, skip, speech)"""
     update.message.reply_text(text)
 
 
@@ -64,22 +75,27 @@ def get_posts(update, context):
 
 def set_wall(update, context):
     text = update.message.text
-    link = text.replace('/setwall ', '')
-    data = link.split('-')[1]
-    wall = "-" + str(data)
-    logging.info(f'This is your text: {text}')
-    logging.info(f'This is your link: {link}')
-    logging.info(f'This is your wall: {wall}')
+    data = text.replace('/setwall', '').strip()
+    regexp = re.compile(r"https://vk\.com/wall-(\d*)")
+    matches = regexp.match(data)
+    if not matches:
+        update.message.reply_text('Введите стену в формате /setwall https://vk.com/wall-5678342')
+
+    wall_id = str(matches.group()[0])
     payload = {
-        "wall": str(wall),
-        "link": str(link),
+        "wall": wall_id,
+        "link": "https://vk.com/wall-" + wall_id,
         "uid": "-1"
     }
     try:
         httpx.post(f'{backend_url}/api/v1/walls', json=payload)
-        update.message.reply_text('Ваша стена добавлена в базу')
+        update.message.reply_text('Ваша стена отправлена на анализ')
     except httpx.ConnectError:
         logging.info("Can\'t connect to backend")
+
+    logging.info(f'This is your text: {text}')
+    logging.info(f'This is your link: {payload["link"]}')
+    logging.info(f'This is your wall: {wall_id}')
 
 
 def main():
@@ -91,7 +107,8 @@ def main():
     dp.add_handler(CommandHandler("predict", get_emotions))
     dp.add_handler(CommandHandler("posts", get_posts))
     dp.add_handler(CommandHandler("start", greet_user))
-    # dp.add_handler(MessageHandler(Filters.text, default_response_to_user))
+    dp.add_handler(CommandHandler("help", print_help))
+    dp.add_handler(MessageHandler(Filters.text, default_response_to_user))
     mybot.start_polling()
     mybot.idle()
 
