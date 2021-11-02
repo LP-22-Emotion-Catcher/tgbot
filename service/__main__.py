@@ -33,8 +33,8 @@ def print_help(update, context):
     text = """Команды:\n
  /predict твой текст - определяет эмоциональный окрас текста\n
  Пример: /predict Какой замечательный сегодня день!\n
- /set_wall ссылка на стену в контакте - добавляет стену в базу\n
- Пример: /set_wall https://vk.com/wall-101982925\n
+ /setwall ссылка на стену в контакте - добавляет стену в базу\n
+ Пример: /setwall https://vk.com/wall-101982925\n
  /posts номер стены эм.окраска - возвращает пост со стены с эм.окраской\n
  Пример: /posts -101982925 positive (доступные варианты: negative, neutral, skip, speech)"""
     update.message.reply_text(text)
