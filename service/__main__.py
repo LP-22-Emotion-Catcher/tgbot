@@ -5,10 +5,6 @@ import re
 
 from service.config import TOKEN, emotion_url, backend_url
 
-
-# logging.basicConfig(format='%(name)s - %(levelname)s - %(message)s',
-#                    level=logging.INFO,
-#                    filename='bot.log')
 logger = logging.getLogger(__name__)
 
 PROXY = {
@@ -80,10 +76,10 @@ def set_wall(update, context):
     matches = regexp.match(data)
     if not matches:
         update.message.reply_text('Введите стену в формате /setwall https://vk.com/wall-5678342')
+    wall_id = str(matches.groups()[0])
 
-    wall_id = str(matches.group()[0])
     payload = {
-        "wall": wall_id,
+        "wall": "-" + wall_id,
         "link": "https://vk.com/wall-" + wall_id,
         "uid": "-1"
     }
@@ -92,10 +88,6 @@ def set_wall(update, context):
         update.message.reply_text('Ваша стена отправлена на анализ')
     except httpx.ConnectError:
         logging.info("Can\'t connect to backend")
-
-    logging.info(f'This is your text: {text}')
-    logging.info(f'This is your link: {payload["link"]}')
-    logging.info(f'This is your wall: {wall_id}')
 
 
 def main():
