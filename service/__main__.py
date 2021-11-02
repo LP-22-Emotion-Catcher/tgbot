@@ -47,7 +47,7 @@ def get_emotions(update, context):
     payload = {'text': text}
     try:
         emotion = httpx.post(f'{emotion_url}/api/v1/predict', json=payload)
-    except httpx.ConnectError:
+    except (httpx.ConnectError, httpx.RemoteProtocolError):
         logging.info('Can\'t connect with emotion service. No emotion color is received')
 
     emotion = emotion.json()['emotions'][0]
@@ -65,7 +65,7 @@ def get_posts(update, context):
     try:
         posts = httpx.get(f'{backend_url}/api/v1/walls/{uid}/posts/?emotion={{{need_emotion}}}')
         update.message.reply_text('''Указанной эмоциональной окраске: {} \nCоответствуют комментарии:\n"{}"\n'''.format(need_emotion, posts.json()[0]['text']))
-    except httpx.ConnectError:
+    except (httpx.ConnectError, httpx.RemoteProtocolError):
         logging.info('Can\'t connect to backend')
 
 
@@ -86,7 +86,7 @@ def set_wall(update, context):
     try:
         httpx.post(f'{backend_url}/api/v1/walls', json=payload)
         update.message.reply_text('Ваша стена отправлена на анализ')
-    except httpx.ConnectError:
+    except (httpx.ConnectError, httpx.RemoteProtocolError):
         logging.info("Can\'t connect to backend")
 
 
